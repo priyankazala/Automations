@@ -1,89 +1,93 @@
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 import time
 
+# Function to initialize and return a WebDriver instance
 def get_driver():
+    # Configure Chrome options
     options = webdriver.ChromeOptions()
-    options.add_argument("disable-infobars")
-    options.add_argument("start-maximized")
-    options.add_argument("no-sandbox")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_argument("disable-blink-features=AutomationControlled")
-    driver = webdriver.Chrome(options = options)
+    options.add_argument("disable-infobars")  # Disable infobars
+    options.add_argument("start-maximized")  # Maximize window on startup
+    options.add_argument("no-sandbox")  # Disable sandbox mode
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])  # Exclude automation switch
+    options.add_argument("disable-blink-features=AutomationControlled")  # Disable Blink features controlled by automation
+    # Initialize Chrome WebDriver with configured options
+    driver = webdriver.Chrome(options=options)
+    # Open LinkedIn login page
     driver.get("https://www.linkedin.com/checkpoint/lg/login?trk=homepage-basic_sign-in-submit")
     return driver
 
-
-def main(email,password,pages):
+# Main function to execute the automation process
+def main(email, password, pages):
     try:
+        # Get WebDriver instance
         driver = get_driver()
-        
+
+        # Wait for 2 seconds
         time.sleep(2)
-        username_field = driver.find_element(By.ID,value="username")
+        
+        # Find and fill the username field
+        username_field = driver.find_element(By.ID, value="username")
         username_field.send_keys(email)
         time.sleep(1)
 
-
-        # # Locate the password field and send keys
-        password_field = driver.find_element(By.ID,value="password")
+        # Find and fill the password field
+        password_field = driver.find_element(By.ID, value="password")
         password_field.send_keys(password)
         time.sleep(1)
 
+        # Click the login button
         login_button = driver.find_element(By.XPATH, value="/html/body/div/main/div[2]/div[1]/form/div[3]/button")
         login_button.click()
+        
+        # Wait for 40 seconds for login to complete
         time.sleep(40)
     
         page = 0
-        while(page<pages):
-            
-            # next_button_locator = "//button[.//span[text()='Next']]"
-
-            
+        # Iterate through each page
+        while(page < pages):
             # Find all "Connect" buttons
             connect_buttons = driver.find_elements(By.XPATH, value="//button[.//span[text()='Connect']]")
 
-            # #     # Click each "Connect" button
+            # Click each "Connect" button
             for button in connect_buttons:
-                button .click()
+                button.click()
                 time.sleep(2)
+                # Check if "Send without a note" button is enabled
                 note_button = driver.find_element(By.XPATH, value="//button[.//span[text()='Send without a note']]")
                 if note_button.is_enabled():
                     note_button.click()
                 else:
-                   dismiss_button = driver.execute_script("return document.querySelector('button[aria-label=\"dismiss\"]')")
-                   dismiss_button.click()
-            time.sleep(2)
+                    # If not enabled, dismiss the connection request
+                    dismiss_button = driver.execute_script("return document.querySelector('button[aria-label=\"dismiss\"]')")
+                    dismiss_button.click()
+                time.sleep(2)
 
-            # next_button = driver.find_element(By.XPATH, "button[.//svg.//span[text()='Next ')]")
+            # Click the next button to move to the next page
             next_button = driver.execute_script("return document.querySelector('button[aria-label=\"Next\"]')")
             next_button.click()
+            # Wait for 10 seconds before proceeding to the next page
             time.sleep(10)
-            page+=1
+            page += 1
             print("Requests sent for : ", page)
-         
-            
-            
-               
+
+        # Close the browser once all pages are processed
         print("Browser closed.")
         driver.quit()
 
-    
-
-
-
+    # Handle NoSuchElementException
     except NoSuchElementException as e:
         print(f"Element not found: {e}")
 
+    # Handle other exceptions
     except Exception as e:
         print(f"An error occurred: {e}")
 
-
-
+# Example usage
 email = "youremail@mail.com"
 password = "Password"
 pages = 3
-main(email,password,pages)
+main(email, password, pages)
